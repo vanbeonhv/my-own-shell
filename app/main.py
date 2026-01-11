@@ -1,8 +1,10 @@
+import os
 import sys
+from unittest import result
 
+# PATH="/usr/bin:/usr/local/bin:"
 
 def main():
-    # TODO: Uncomment the code below to pass the first stage
     while(True):
         sys.stdout.write("$ ")
         command = input()
@@ -28,10 +30,28 @@ def echo_handler(word_list: list[str], context):
 
 def type_handler(word_list:list[str], command_map: dict):
     arguments = ' '.join(word_list)
-    if(arguments in command_map):
+    is_found = False
+    if arguments in command_map:
         print(f'{arguments} is a shell builtin')
-    else:
+        is_found = True
+    else: 
+        paths = os.environ['PATH'].split(os.pathsep)
+        for path in paths:
+            full_path = os.path.join(path, arguments)
+            result = check_executable_files(full_path)
+            if(result):
+                print(f"{arguments} is {full_path}")
+                is_found = True
+                break
+
+    if(is_found is False): 
         print(f'{arguments}: not found')
+
+def check_executable_files(full_path: str):
+    if(os.path.isfile(full_path)):
+        return os.access(full_path, os.X_OK)
+    return False
+
 
 if __name__ == "__main__":
     main()
