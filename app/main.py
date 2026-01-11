@@ -13,30 +13,22 @@ def main():
         command_map = {
             'echo': echo_handler,
             'type': type_handler,
-            'exit': lambda x: x
+            'exit': lambda x, y: 'EXIT'
         }
 
-        match first_word:
-            case 'echo':
-                arguments = ' '.join(word_list)
-                print(arguments)
-            case 'type':
-                arguments = ' '.join(word_list)
-                if(arguments in command_map.keys()):
-                    print(f'{arguments} is a shell builtin')
-                else:
-                    print(f'{arguments}: not found')
-            case 'exit':
+        if first_word in command_map:
+            result = command_map[first_word](word_list, command_map)
+            if(result == 'EXIT'): 
                 break
-            case _:
-                print(f"{command}: command not found")
-
-def echo_handler(word_list: list[str]):
+        else:
+            print(f"{command}: command not found")
+                
+def echo_handler(word_list: list[str], context):
     print(' '.join(word_list))
 
 def type_handler(word_list:list[str], command_map: dict):
     arguments = ' '.join(word_list)
-    if(arguments in command_map.keys):
+    if(arguments in command_map):
         print(f'{arguments} is a shell builtin')
     else:
         print(f'{arguments}: not found')
