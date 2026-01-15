@@ -20,6 +20,7 @@ def main():
         command_map = {
             'echo': echo_handler,
             'type': type_handler,
+            'pwd': pwd_handler,
             'exit': lambda x, y: 'EXIT'
         }
 
@@ -38,12 +39,12 @@ def main():
 
 # ================================================================
                 
-def echo_handler(word_list: list[str], context):
+def echo_handler(word_list: list[str], context) -> str:
     word_list.pop(0)
     print(' '.join(word_list))
     return 'CONTINUE'
 
-def type_handler(word_list:list[str], command_map: dict):
+def type_handler(word_list:list[str], command_map: dict)-> str:
     # need handle case 'type' + blank comand
     main_command = word_list[1]
     is_found = False
@@ -58,6 +59,11 @@ def type_handler(word_list:list[str], command_map: dict):
             is_found = True
     if(is_found is False): 
         print(f'{main_command}: not found')
+    return 'CONTINUE'
+
+def pwd_handler(word_list: list[str], context) -> str:
+    cwd = os.getcwd()
+    print(cwd)
     return 'CONTINUE'
 
 def check_executable_files(main_command: str):
