@@ -8,9 +8,14 @@ class FileDetail:
         self.is_executable = is_executable
 
 
-PATHS = os.environ['PATH'].split(os.pathsep)
 # PATHS = ['D:\\apps\\Microsoft VS Code\\bin']
+PATHS = os.environ['PATH'].split(os.pathsep)
+
 def main():
+    init_dir = os.getcwd()
+    dir = [init_dir]
+
+
     while(True):
         sys.stdout.write("$ ")
         input_command = input()
@@ -21,11 +26,12 @@ def main():
             'echo': echo_handler,
             'type': type_handler,
             'pwd': pwd_handler,
-            'exit': lambda x, y: 'EXIT'
+            'cd': cd_handler,
+            'exit': lambda x, y, z: 'EXIT'
         }
 
         if first_word in command_map:
-            result = command_map[first_word](word_list, command_map)
+            result = command_map[first_word](word_list, command_map, dir)
             if(result == 'EXIT'): 
                 break
             if(result == 'CONTINUE'):
@@ -39,12 +45,12 @@ def main():
 
 # ================================================================
                 
-def echo_handler(word_list: list[str], context) -> str:
+def echo_handler(word_list: list[str], context, dir) -> str:
     word_list.pop(0)
     print(' '.join(word_list))
     return 'CONTINUE'
 
-def type_handler(word_list:list[str], command_map: dict)-> str:
+def type_handler(word_list:list[str], command_map: dict, dir)-> str:
     # need handle case 'type' + blank comand
     main_command = word_list[1]
     is_found = False
@@ -61,10 +67,22 @@ def type_handler(word_list:list[str], command_map: dict)-> str:
         print(f'{main_command}: not found')
     return 'CONTINUE'
 
-def pwd_handler(word_list: list[str], context) -> str:
-    cwd = os.getcwd()
-    print(cwd)
+def pwd_handler(word_list: list[str], context, dir: list[str]) -> str:
+    print(dir[0])
     return 'CONTINUE'
+
+def cd_handler(word_list: list[str], context, dir) -> str:
+    if(len(word_list) > 2): 
+        print("Too many args for cd command")
+    path_agr = word_list[1]
+    if(path_agr[0] == '/'):
+        if(os.path.isdir(path_agr)):
+            dir[0] = path_agr
+        else:
+            print(f"cd: {path_agr}: No such file or directory")
+
+    return 'CONTINUE'
+
 
 def check_executable_files(main_command: str):
     for path in PATHS:
