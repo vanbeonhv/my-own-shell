@@ -10,11 +10,11 @@ class FileDetail:
 
 # PATHS = ['D:\\apps\\Microsoft VS Code\\bin']
 PATHS = os.environ['PATH'].split(os.pathsep)
+SEP = os.sep
 
 def main():
     init_dir = os.getcwd()
-    dir = [init_dir]
-
+    dir = {'current': init_dir}
 
     while(True):
         sys.stdout.write("$ ")
@@ -43,7 +43,7 @@ def main():
         else:
             print(f"{input_command}: command not found")
 
-# ================================================================
+# =====================Handler=================================
                 
 def echo_handler(word_list: list[str], context, dir) -> str:
     word_list.pop(0)
@@ -67,43 +67,85 @@ def type_handler(word_list:list[str], command_map: dict, dir)-> str:
         print(f'{main_command}: not found')
     return 'CONTINUE'
 
-def pwd_handler(word_list: list[str], context, dir: list[str]) -> str:
-    print(dir[0])
+def pwd_handler(word_list: list[str], context, dir: dict) -> str:
+    print(dir['current'])
     return 'CONTINUE'
 
-def cd_handler(word_list: list[str], context, dir) -> str:
+def cd_handler(word_list: list[str], context, dir: dict) -> str:
     if(len(word_list) > 2): 
         print("Too many args for cd command")
     path_agr = word_list[1]
     if(path_agr[0] == '/'):
         if(os.path.isdir(path_agr)):
-            dir[0] = path_agr
+            dir['current'] = path_agr
         else:
             print(f"cd: {path_agr}: No such file or directory")
+    else:
+        cd_relative(path_agr, dir)
 
     return 'CONTINUE'
 
+def cd_relative(path_agr: str, dir: dict):
+    if('/' in path_agr):
+        folders = path_agr.split('/')
+        if(folders[0] == '.'):
+            next_dir_str = SEP.join(folders[1:])
+            handle_sub_directory(next_dir_str, dir)
+            return
+        if(folders[0] == '..'):
+            no_of_back = 0
+            for text in folders:
+                if text == '..':
+                    no_of_back = no_of_back + 1
+                else: 
+                    break
+            cur_dir_list = dir['current'].split(SEP)
+            base_dir = cur_dir_list[:-1 * no_of_back]
+            dir['current'] = SEP.join(base_dir)
+            
+            next_dir = folders[no_of_back:]
+            next_dir_str = SEP.join(next_dir)
+            handle_sub_directory(next_dir_str, dir)
+            return
+            
+    else:
+        handle_sub_directory(path_agr, dir)
 
+def handle_sub_directory(path_agr: str, dir: dict):
+    # Case user nhập thẳng folder kế tiếp
+    if(path_agr == ''):
+        target_dir = dir['current']
+    else:
+        target_dir = os.path.join(dir['current'], path_agr)
+    if(os.path.isdir(target_dir)):
+        dir['current'] = target_dir
+    else:
+        print(f"cd: {path_agr}: No such file or directory")
+
+
+# ====================== Util============================
 def check_executable_files(main_command: str):
-    for path in PATHS:
-        full_path = os.path.join(path, main_command)
-
-        if sys.platform == "win32":
-            return check_executable_file_window(full_path)
-        else:
+    if sys.platform == "win32":
+        return check_executable_file_window(main_command)
+    else:
+        for path in PATHS:
+            full_path = os.path.join(path, main_command)
             is_executable = is_file_executable(full_path)
             if(is_executable):
                 return FileDetail(main_command, full_path, is_executable)
-    return FileDetail('', '', False)
+        return FileDetail('', '', False)
 
-def check_executable_file_window(full_path):
-    window_extensions = ['.exe', '.cmd']
-    for extension in window_extensions:
-        absolute_path = full_path + extension
-        is_executable = is_file_executable(absolute_path)
-        if(is_executable):
-            # ở window, để execute file thì phải truyền full path + extentions. Linux thì chỉ cần name
-            return FileDetail(absolute_path, absolute_path, is_executable)
+def check_executable_file_window(main_command):
+    for path in PATHS:
+        full_path = os.path.join(path, main_command)
+        window_extensions = ['.exe', '.cmd', '.bat']
+        for extension in window_extensions:
+            absolute_path = full_path + extension
+            is_executable = is_file_executable(absolute_path)
+            if(is_executable):
+                # ở window, để execute file thì phải truyền full path + extentions. Linux thì chỉ cần name
+                return FileDetail(absolute_path, absolute_path, is_executable)
+    return FileDetail('', '', False)
 
 def is_file_executable(full_path: str):
     if(os.path.isfile(full_path)):
