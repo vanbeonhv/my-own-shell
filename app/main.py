@@ -29,6 +29,7 @@ def main():
                 break
             if(result == 'CONTINUE'):
                 continue
+            
         execute_check_result = check_executable_files(word_list[0])
         if(execute_check_result.is_executable):
             # sub process nhận là dạng list string ['fullpath_extention', 'argument']

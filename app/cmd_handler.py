@@ -11,6 +11,28 @@ def echo_handler(word_list: list[str], context, dir) -> str:
     print(' '.join(word_list))
     return 'CONTINUE'
 
+def output_redirection(word_list: list[str]) -> list[str]:
+    """Handle write output to file if word_list include '1>' or '>'
+    Returns:
+        list[str]: part of word_list before '1>' or '>'
+    """
+    spliter_idx = -1
+    for idx, word in enumerate(word_list):
+        if(word == '1>' | word == '>'):
+            spliter_idx = idx
+            break
+    if(spliter_idx == -1):
+        return word_list
+    # THIS IS LATEST LOGIC FOR SECTION 14. "REDIRECTION"
+    # Stuck here trying handle output_file_dir, it can be both ~, absolute or relative ( ~, ./, ../../). 
+    # CAN NOT reuse cd_handler because it doesn't handle case director does not exist
+    # To continue, I have to refactor cd_handler, split resolve path logic ( ~, ./, ../../)
+    # But it will take too much time and less fun. So I decided to stop here.
+    output_file_dir = word_list[spliter_idx:]
+    
+
+    return word_list[:-1 * spliter_idx]
+
 def type_handler(word_list:list[str], command_map: dict, dir)-> str:
     # need handle case 'type' + blank comand
     main_command = word_list[1]
