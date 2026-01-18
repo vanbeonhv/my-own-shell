@@ -63,6 +63,7 @@ def type_handler(word_list:list[str], command_map: dict, dir)-> str:
         if(result.is_executable):
             print(f"{main_command} is {result.path}")
             is_found = True
+
     if(is_found is False): 
         print(f'{main_command}: not found')
     return 'CONTINUE'
@@ -74,20 +75,20 @@ def pwd_handler(word_list: list[str], context, dir: dict) -> str:
 def cd_handler(word_list: list[str], context, dir: dict) -> str:
     if(len(word_list) > 2): 
         print("Too many args for cd command")
-    path_agr = word_list[1]
-    if(path_agr[0] == '/'):
-        if(os.path.isdir(path_agr)):
-            dir['current'] = path_agr
+    path_input = word_list[1]
+    if(path_input[0] == '/'):
+        if(os.path.isdir(path_input)):
+            dir['current'] = path_input
         else:
-            print(f"cd: {path_agr}: No such file or directory")
+            print(f"cd: {path_input}: No such file or directory")
     else:
-        cd_relative(path_agr, dir)
+        cd_relative(path_input, dir)
 
     return 'CONTINUE'
 
-def cd_relative(path_agr: str, dir: dict):
-    if('/' in path_agr):
-        folders = path_agr.split('/')
+def cd_relative(path_input: str, dir: dict):
+    if('/' in path_input):
+        folders = path_input.split('/')
         if(folders[0] == '.'):
             next_dir_str = SEP.join(folders[1:])
             handle_sub_directory(next_dir_str, dir)
@@ -107,20 +108,29 @@ def cd_relative(path_agr: str, dir: dict):
             next_dir_str = SEP.join(next_dir)
             handle_sub_directory(next_dir_str, dir)
             return
-            
+        if(folders[0] == '~'):
+            dir['current'] = get_home_directory()
+            next_dir_str = SEP.join(folders[1:])
+            handle_sub_directory(next_dir_str, dir)
+            return
+    if(path_input == '~'):
+        dir['current'] = get_home_directory()
+        handle_sub_directory('', dir)
     else:
-        handle_sub_directory(path_agr, dir)
+        handle_sub_directory(path_input, dir)
 
-def handle_sub_directory(path_agr: str, dir: dict):
-    # Case user nhập thẳng folder kế tiếp
-    if(path_agr == ''):
+def handle_sub_directory(path_input: str, dir: dict):
+    """Case user nhập thẳng folder kế tiếp
+    """
+    # Không có folder, thì nghĩa thuần go back.
+    if(path_input == ''):
         target_dir = dir['current']
     else:
-        target_dir = os.path.join(dir['current'], path_agr)
+        target_dir = os.path.join(dir['current'], path_input)
     if(os.path.isdir(target_dir)):
         dir['current'] = target_dir
     else:
-        print(f"cd: {path_agr}: No such file or directory")
+        print(f"cd: {path_input}: No such file or directory")
 
 
 # ====================== Util============================
@@ -151,6 +161,18 @@ def is_file_executable(full_path: str):
     if(os.path.isfile(full_path)):
         return os.access(full_path, os.X_OK)
     return False
+
+def get_home_directory() -> str:
+    """Thằng window nó lại phải ghép từ 2 biến, Linux thì cứ lấy thẳng"""
+    if sys.platform == "win32":
+        home_drive = os.getenv('HOMEDRIVE', '')
+        home_path = os.getenv('HOMEPATH', '')
+        if home_drive and home_path:
+            return home_drive + home_path
+        # Fallback to USERPROFILE
+        return os.getenv('USERPROFILE', '')
+    else:
+        return os.getenv('HOME', '')
 
 
 if __name__ == "__main__":
