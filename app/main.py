@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 import sys
 from app.cmd_handler import cd_handler, pwd_handler, type_handler, echo_handler
@@ -11,7 +12,7 @@ def main():
     while(True):
         sys.stdout.write("$ ")
         input_command = input()
-        word_list = input_command.split()
+        word_list = shlex.split(input_command)
         first_word = word_list[0]
 
         command_map = {
